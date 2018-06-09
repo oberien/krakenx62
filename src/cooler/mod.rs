@@ -52,7 +52,6 @@ impl Cooler {
     pub fn status(&self) -> UsbResult<Status> {
         let mut bytes = [0u8; 64];
         let read = self.handle.read_interrupt(0x81, &mut bytes, ZERO)?;
-        println!("{}", read);
         Ok(Status {
             liquid_temp: bytes[1] as f32 + bytes[2] as f32 / 10.,
             fan_speed: ((bytes[3] as u16) << 8) + bytes[4] as u16,
