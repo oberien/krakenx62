@@ -56,25 +56,26 @@ fn main() {
 }
 
 fn pump_speed(temp: f32) -> Option<u8> {
-    match temp {
-        _ if temp < 40. => None,
-        _ if temp > 45. => Some(100),
-        temp => {
-            let ps = 60. + 40. * (temp - 40.) / 5.;
-            Some(cmp::min(ps as u8, 100))
-        }
+    if temp < 40. {
+        return None;
     }
+    if temp > 45. {
+        return Some(100);
+    }
+    let ps = 60. + 40. * (temp - 40.) / 5.;
+    Some(cmp::min(ps as u8, 100))
 }
 
 fn fan_speed(temp: f32) -> Option<u8> {
-    match temp {
-        _ if temp < 40. => None,
-        _ if temp > 45. => Some(100),
-        temp => {
-            let fs = 25. + 75. * (temp - 40.) / 5.;
-            Some(cmp::min(fs as u8, 100))
-        }
+    if temp < 40. {
+        return None;
     }
+    if temp > 45. {
+        return Some(100);
+    }
+
+    let fs = 25. + 75. * (temp - 40.) / 5.;
+    Some(cmp::min(fs as u8, 100))
 }
 
 fn color(temp: f32) -> Color {
@@ -95,9 +96,9 @@ fn color(temp: f32) -> Color {
         let idx = (v_scaled * (GRADIENT.len()-1) as f32) as usize;
         let diff = (v_scaled * (GRADIENT.len()-1) as f32) - idx as f32;
         Color::new(
-            ((((GRADIENT[idx+1].red as i16 - GRADIENT[idx].red as i16) as f32) * diff) as i16 + GRADIENT[idx].red as i16) as u8,
-            ((((GRADIENT[idx+1].green as i16 - GRADIENT[idx].green as i16) as f32) * diff) as i16 + GRADIENT[idx].green as i16) as u8,
-            ((((GRADIENT[idx+1].blue as i16 - GRADIENT[idx].blue as i16) as f32) * diff) as i16 + GRADIENT[idx].blue as i16) as u8,
+            ((f32::from(i16::from(GRADIENT[idx+1].red) - i16::from(GRADIENT[idx].red)) * diff) as i16 + i16::from(GRADIENT[idx].red)) as u8,
+            ((f32::from(i16::from(GRADIENT[idx+1].green) - i16::from(GRADIENT[idx].green)) * diff) as i16 + i16::from(GRADIENT[idx].green)) as u8,
+            ((f32::from(i16::from(GRADIENT[idx+1].blue) - i16::from(GRADIENT[idx].blue)) * diff) as i16 + i16::from(GRADIENT[idx].blue)) as u8,
         )
     }
 }

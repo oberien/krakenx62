@@ -51,11 +51,11 @@ impl Cooler {
 
     pub fn status(&self) -> UsbResult<Status> {
         let mut bytes = [0u8; 64];
-        let read = self.handle.read_interrupt(0x81, &mut bytes, ZERO)?;
+        self.handle.read_interrupt(0x81, &mut bytes, ZERO)?;
         Ok(Status {
-            liquid_temp: bytes[1] as f32 + bytes[2] as f32 / 10.,
-            fan_speed: ((bytes[3] as u16) << 8) + bytes[4] as u16,
-            pump_speed: ((bytes[5] as u16) << 8) + bytes[6] as u16,
+            liquid_temp: f32::from(bytes[1]) + f32::from(bytes[2]) / 10.,
+            fan_speed: (u16::from(bytes[3]) << 8) + u16::from(bytes[4]),
+            pump_speed: (u16::from(bytes[5]) << 8) + u16::from(bytes[6]),
         })
     }
 
@@ -126,16 +126,18 @@ macro_rules! unwrap_safe {
     ($e:expr) => {
         match $e {
             Ok(_) => {}
-            Err(e) => println!("Error while dropping Cooler during another panic: {:?}", e),
+            Err(e) => ,
         }
     };
 }
 
 impl Drop for Cooler {
     fn drop(&mut self) {
-        unwrap_safe!(self.handle.release_interface(0));
+        let _ = self.handle.release_interface(0)
+            .map_err(|e| println!("Error while releasing interface 0: {:?}", e));
         if self.has_kernel_driver {
-            unwrap_safe!(self.handle.attach_kernel_driver(0));
+            let _ = self.handle.attach_kernel_driver(0)
+                .map_err(|e| println!("Error while attacking kernel driver to iface 0: {:?}", e));
         }
         // drop the DeviceHandle to release Context
         unsafe { ManuallyDrop::drop(&mut self.handle) };
